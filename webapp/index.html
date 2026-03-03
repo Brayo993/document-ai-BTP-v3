@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brian Home Document AI – Extract Data from Invoices</title>
+
+  <!-- SAP Theming Base (Morning Horizon) -->
+  <link href="https://unpkg.com/@sap-theming/theming-base-content/content/Base/baseLib/sap_horizon/css_variables.css"
+    rel="stylesheet">
+  <!-- Fundamental Styles -->
+  <link href="https://unpkg.com/fundamental-styles@latest/dist/fundamental-styles.css" rel="stylesheet">
+  <!-- Fundamental Styles Theme -->
+  <link href="https://unpkg.com/fundamental-styles@latest/dist/theming/sap_horizon.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/main.css" />
+  <script>
+    const user = localStorage.getItem('docai_user');
+    if (!user) window.location.href = '/login.html';
+  </script>
+  <script type="module" src="/main.js"></script>
+</head>
+
+<body class="fd-page">
+  <!-- Shell Bar -->
+  <div class="fd-shellbar">
+    <div class="fd-shellbar__group fd-shellbar__group--product">
+      <span class="fd-shellbar__logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--sapShell_InteractiveTextColor)" stroke-width="2" width="28"
+          height="28">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      </span>
+      <span class="fd-shellbar__title">Brian Home Document AI</span>
+      <span class="fd-shellbar__subtitle">SAP Business Document Processing</span>
+    </div>
+    <div class="fd-shellbar__group fd-shellbar__group--actions">
+      <div class="fd-shellbar__action">
+        <nav class="shellbar-nav">
+          <a href="/" class="fd-button fd-button--transparent fd-shellbar__button shellbar-nav-active">Extract</a>
+          <a href="/dashboard.html" class="fd-button fd-button--transparent fd-shellbar__button">Dashboard</a>
+        </nav>
+      </div>
+      <div class="fd-shellbar__action">
+        <span id="userEmail" style="color: var(--sapShell_TextColor); font-size: 0.85rem; margin-right: 0.5rem;"></span>
+        <button id="btnLogout" class="fd-button fd-button--transparent fd-shellbar__button">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="content">
+    <div class="page-header">
+      <h1 class="fd-title fd-title--h3" style="margin-bottom: 0.5rem;">Extract Data from Documents</h1>
+      <p style="color: var(--sapContent_LabelColor); margin: 0; font-size: 0.925rem;">
+        Upload invoices, receipts, or purchase orders to automatically extract structured data using AI
+      </p>
+    </div>
+
+    <!-- Upload Card -->
+    <div class="fd-card" role="region" aria-label="Upload Documents">
+      <div class="fd-card__header" role="group" aria-label="Card Header">
+        <div class="fd-card__header-text">
+          <div class="fd-card__title-area">
+            <div class="fd-card__title" style="display: flex; align-items: center; gap: 0.5rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--sapBrandColor)"
+                stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Upload Documents
+            </div>
+            <span id="fileCount" class="fd-object-status fd-object-status--informative">0 files selected</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fd-card__content" role="group">
+        <div id="dropZone" class="upload-zone">
+          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="var(--sapBrandColor)" stroke-width="2"
+            width="48" height="48">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <p style="color: var(--sapTextColor); font-size: 1rem; margin: 0.5rem 0;">Drag & drop files here or click to
+            browse</p>
+          <p style="color: var(--sapContent_LabelColor); font-size: 0.8rem; margin: 0;">Supports PDF, PNG, JPG, TIFF •
+            Multiple files allowed</p>
+          <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.tiff,.tif" multiple hidden />
+        </div>
+
+        <div id="fileList" class="hidden"></div>
+
+        <!-- Rotation/Type selector -->
+        <div id="rotationSection" class="rotation-section hidden" style="margin-top: 1rem;">
+          <div class="fd-form-item">
+            <label class="fd-form-label" for="rotationSelect">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="vertical-align: middle; margin-right: 4px;">
+                <path d="M21 2v6h-6"></path>
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                <path d="M3 22v-6h6"></path>
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+              </svg>
+              Rotation:
+            </label>
+            <select id="rotationSelect" class="fd-select__control">
+              <option value="0">0° (No rotation)</option>
+              <option value="90">90° Clockwise</option>
+              <option value="180">180° (Upside down)</option>
+              <option value="270">270° Clockwise</option>
+            </select>
+          </div>
+          <div class="fd-form-item">
+            <label class="fd-form-label" for="documentTypeSelect">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="vertical-align: middle; margin-right: 4px;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              Doc Type:
+            </label>
+            <select id="documentTypeSelect" class="fd-select__control">
+              <option value="invoice">Invoice</option>
+              <option value="paymentAdvice">Receipt / Payment Advice</option>
+              <option value="purchaseOrder">Purchase Order</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="fd-bar fd-bar--footer">
+          <div class="fd-bar__right">
+            <div class="fd-bar__element">
+              <button id="btnExtract" class="fd-button fd-button--emphasized" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  style="margin-right: 4px;">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                Extract All
+              </button>
+            </div>
+            <div class="fd-bar__element">
+              <button id="btnClear" class="fd-button fd-button--transparent" disabled>Clear All</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="statusMessage" class="hidden" style="margin-top: 1rem;"></div>
+
+        <!-- Progress Indicator -->
+        <div id="progressBar" class="fd-progress-indicator hidden" style="margin-top: 1rem;" aria-label="Progress">
+          <div id="progressFill" class="fd-progress-indicator__bar" style="width: 0%; min-width: 0;"></div>
+        </div>
+
+        <!-- Batch Progress -->
+        <div id="batchProgress" class="batch-progress hidden">
+          <div id="batchStats" class="batch-stats"></div>
+          <div id="batchFileList" style="max-height: 200px; overflow-y: auto;"></div>
+          <button id="btnRetryFailed" class="fd-button fd-button--transparent hidden"
+            style="margin-top: 0.75rem; font-size: 0.8rem;">🔄 Retry Failed</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Card -->
+    <div id="resultsCard" class="fd-card hidden" role="region" aria-label="Extraction Results">
+      <div class="fd-card__header" role="group" aria-label="Results Header">
+        <div class="fd-card__header-text">
+          <div class="fd-card__title-area">
+            <div class="fd-card__title" style="display: flex; align-items: center; gap: 0.5rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--sapPositiveColor)"
+                stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              Extraction Results
+            </div>
+          </div>
+        </div>
+        <div style="padding: 0 1rem;">
+          <button id="btnExportExcel" class="fd-button fd-button--positive">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              style="margin-right: 4px;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export to Excel
+          </button>
+        </div>
+      </div>
+      <div class="fd-card__content" role="group">
+        <div id="statsGrid" class="stats-grid"></div>
+        <div id="resultsContainer"></div>
+      </div>
+    </div>
+
+    <!-- History Card -->
+    <div id="historyCard" class="fd-card" role="region" aria-label="Processing History">
+      <div class="fd-card__header" role="group" aria-label="History Header">
+        <div class="fd-card__header-text">
+          <div class="fd-card__title-area">
+            <div class="fd-card__title" style="display: flex; align-items: center; gap: 0.5rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--sapBrandColor)"
+                stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Processing History
+            </div>
+          </div>
+        </div>
+        <div style="padding: 0 1rem;">
+          <button id="btnClearHistory" class="fd-button fd-button--transparent" style="font-size: 0.8rem;">Clear
+            History</button>
+        </div>
+      </div>
+      <div class="fd-card__content" role="group">
+        <div id="historyContainer" style="max-height: 300px; overflow-y: auto;">
+          <p style="color: var(--sapContent_LabelColor); padding: 1rem;">No processing history yet.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+
+</html>

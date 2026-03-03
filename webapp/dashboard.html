@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard – Brian Home Document AI</title>
+
+    <!-- SAP Theming Base (Morning Horizon) -->
+    <link href="https://unpkg.com/@sap-theming/theming-base-content/content/Base/baseLib/sap_horizon/css_variables.css"
+        rel="stylesheet">
+    <!-- Fundamental Styles -->
+    <link href="https://unpkg.com/fundamental-styles@latest/dist/fundamental-styles.css" rel="stylesheet">
+    <!-- Fundamental Styles Theme -->
+    <link href="https://unpkg.com/fundamental-styles@latest/dist/theming/sap_horizon.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/main.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script>
+        const user = localStorage.getItem('docai_user');
+        if (!user) window.location.href = '/login.html';
+    </script>
+</head>
+
+<body class="fd-page">
+    <!-- Shell Bar -->
+    <div class="fd-shellbar">
+        <div class="fd-shellbar__group fd-shellbar__group--product">
+            <span class="fd-shellbar__logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--sapShell_InteractiveTextColor)" stroke-width="2"
+                    width="28" height="28">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+            </span>
+            <span class="fd-shellbar__title">Brian Home Document AI</span>
+            <span class="fd-shellbar__subtitle">Analytics Dashboard</span>
+        </div>
+        <div class="fd-shellbar__group fd-shellbar__group--actions">
+            <div class="fd-shellbar__action">
+                <nav class="shellbar-nav">
+                    <a href="/" class="fd-button fd-button--transparent fd-shellbar__button">Extract</a>
+                    <a href="/dashboard.html"
+                        class="fd-button fd-button--transparent fd-shellbar__button shellbar-nav-active">Dashboard</a>
+                </nav>
+            </div>
+            <div class="fd-shellbar__action">
+                <span id="userEmail"
+                    style="color: var(--sapShell_TextColor); font-size: 0.85rem; margin-right: 0.5rem;"></span>
+                <button id="btnLogout" class="fd-button fd-button--transparent fd-shellbar__button">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="content">
+        <div class="page-header">
+            <h1 class="fd-title fd-title--h3" style="margin-bottom: 0.5rem;">Processing Analytics</h1>
+            <p style="color: var(--sapContent_LabelColor); margin: 0; font-size: 0.925rem;">
+                Track your document processing performance, accuracy trends, and extraction history
+            </p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid" style="margin-bottom: 1.5rem;">
+            <div class="fd-card stat-card-sap" role="region">
+                <div class="fd-card__content" style="text-align: center; padding: 1.25rem;">
+                    <div class="stat-value-sap" id="statTotal">—</div>
+                    <div class="stat-label-sap">Total Documents</div>
+                </div>
+            </div>
+            <div class="fd-card stat-card-sap" role="region">
+                <div class="fd-card__content" style="text-align: center; padding: 1.25rem;">
+                    <div class="stat-value-sap" id="statToday">—</div>
+                    <div class="stat-label-sap">Processed Today</div>
+                </div>
+            </div>
+            <div class="fd-card stat-card-sap" role="region">
+                <div class="fd-card__content" style="text-align: center; padding: 1.25rem;">
+                    <div class="stat-value-sap" id="statConfidence">—</div>
+                    <div class="stat-label-sap">Avg Confidence</div>
+                </div>
+            </div>
+            <div class="fd-card stat-card-sap" role="region">
+                <div class="fd-card__content" style="text-align: center; padding: 1.25rem;">
+                    <div class="stat-value-sap" id="statTypes">—</div>
+                    <div class="stat-label-sap">Document Types</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+            <!-- Line Chart -->
+            <div class="fd-card" role="region" aria-label="Documents Per Day">
+                <div class="fd-card__header" role="group">
+                    <div class="fd-card__header-text">
+                        <div class="fd-card__title-area">
+                            <div class="fd-card__title" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="var(--sapBrandColor)" stroke-width="2">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                                Documents Per Day
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fd-card__content" role="group">
+                    <div style="position: relative; height: 280px; padding: 0.5rem;">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doughnut Chart -->
+            <div class="fd-card" role="region" aria-label="Document Types">
+                <div class="fd-card__header" role="group">
+                    <div class="fd-card__header-text">
+                        <div class="fd-card__title-area">
+                            <div class="fd-card__title" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="var(--sapBrandColor)" stroke-width="2">
+                                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                                    <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                                </svg>
+                                Document Types
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fd-card__content" role="group">
+                    <div
+                        style="position: relative; height: 280px; padding: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confidence Trend Chart -->
+        <div class="fd-card" role="region" aria-label="Confidence Trends">
+            <div class="fd-card__header" role="group">
+                <div class="fd-card__header-text">
+                    <div class="fd-card__title-area">
+                        <div class="fd-card__title" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sapPositiveColor)"
+                                stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            Confidence Trends
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fd-card__content" role="group">
+                <div style="position: relative; height: 250px; padding: 0.5rem;">
+                    <canvas id="confidenceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Extractions Table -->
+        <div class="fd-card" role="region" aria-label="Recent Extractions">
+            <div class="fd-card__header" role="group">
+                <div class="fd-card__header-text">
+                    <div class="fd-card__title-area">
+                        <div class="fd-card__title" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sapBrandColor)"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            Recent Extractions
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fd-card__content" role="group">
+                <div style="overflow-x: auto;">
+                    <table class="fd-table" id="recentTable">
+                        <thead class="fd-table__header">
+                            <tr class="fd-table__row">
+                                <th class="fd-table__cell fd-table__cell--header">File</th>
+                                <th class="fd-table__cell fd-table__cell--header">Type</th>
+                                <th class="fd-table__cell fd-table__cell--header">Fields</th>
+                                <th class="fd-table__cell fd-table__cell--header">Line Items</th>
+                                <th class="fd-table__cell fd-table__cell--header">Confidence</th>
+                                <th class="fd-table__cell fd-table__cell--header">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="fd-table__body" id="recentBody">
+                            <tr class="fd-table__row">
+                                <td class="fd-table__cell" colspan="6"
+                                    style="text-align: center; color: var(--sapContent_LabelColor); padding: 2rem;">
+                                    Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saved Templates -->
+        <div class="fd-card" role="region" aria-label="Saved Templates">
+            <div class="fd-card__header" role="group">
+                <div class="fd-card__header-text">
+                    <div class="fd-card__title-area">
+                        <div class="fd-card__title" style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sapCriticalColor)"
+                                stroke-width="2">
+                                <path
+                                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
+                                </path>
+                            </svg>
+                            Saved Templates
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fd-card__content" role="group">
+                <div id="templatesContainer" style="padding: 1rem;">
+                    <p style="color: var(--sapContent_LabelColor);">No saved templates yet. Extract a document and save
+                        a template to see it here.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // User & Logout
+        const userEmailEl = document.getElementById("userEmail");
+        const btnLogout = document.getElementById("btnLogout");
+        const storedUser = localStorage.getItem("docai_user");
+        if (storedUser) {
+            try {
+                const u = JSON.parse(storedUser);
+                if (userEmailEl) userEmailEl.textContent = u.email || u.name || "";
+            } catch (e) { }
+        }
+        if (btnLogout) {
+            btnLogout.addEventListener("click", () => {
+                localStorage.removeItem("docai_user");
+                window.location.href = "/login.html";
+            });
+        }
+
+        // Chart.js defaults – Canvas cannot resolve CSS variables, use raw hex
+        Chart.defaults.color = '#32363a';
+        Chart.defaults.borderColor = '#e4e4e4';
+        Chart.defaults.font.family = '"72", "72full", Arial, Helvetica, sans-serif';
+        Chart.defaults.font.size = 12;
+
+        const chartColors = {
+            primary: '#0070f2',
+            success: '#188918',
+            warning: '#df6e0c',
+            danger: '#bb0000',
+            purple: '#9b59b6',
+            cyan: '#0e8ac8',
+            pink: '#d856a0'
+        };
+
+        let dailyChart, typeChart, confidenceChart;
+
+        async function loadDashboard() {
+            try {
+                const [statsRes, chartsRes] = await Promise.all([
+                    fetch("/api/dashboard/stats"),
+                    fetch("/api/dashboard/charts")
+                ]);
+                const stats = await statsRes.json();
+                const charts = await chartsRes.json();
+
+                document.getElementById("statTotal").textContent = stats.total_documents || 0;
+                document.getElementById("statToday").textContent = stats.docs_today || 0;
+                document.getElementById("statConfidence").textContent = (stats.avg_confidence || 0) + '%';
+                document.getElementById("statTypes").textContent = (stats.document_types || []).length;
+
+                renderDailyChart(charts.daily_counts || []);
+                renderTypeChart(stats.document_types || []);
+                renderConfidenceChart(charts.confidence_trends || []);
+                renderRecentTable(charts.recent_extractions || []);
+
+            } catch (err) {
+                console.error("Dashboard load error:", err);
+                loadLocalHistory();
+            }
+        }
+
+        function renderDailyChart(data) {
+            const ctx = document.getElementById("dailyChart").getContext("2d");
+            if (dailyChart) dailyChart.destroy();
+
+            if (data.length === 0) {
+                const hist = JSON.parse(localStorage.getItem("documentAI_history") || "[]");
+                const dayCounts = {};
+                hist.forEach(h => {
+                    const d = h.date?.split('T')[0] || 'unknown';
+                    dayCounts[d] = (dayCounts[d] || 0) + (h.docCount || 1);
+                });
+                data = Object.entries(dayCounts).map(([date, count]) => ({ date, count })).sort((a, b) => a.date.localeCompare(b.date));
+            }
+
+            dailyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Documents',
+                        data: data.map(d => d.count),
+                        borderColor: chartColors.primary,
+                        backgroundColor: 'rgba(0, 112, 242, 0.08)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 7,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(0,0,0,0.06)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderTypeChart(data) {
+            const ctx = document.getElementById("typeChart").getContext("2d");
+            if (typeChart) typeChart.destroy();
+
+            if (data.length === 0) data = [{ type: 'invoice', count: 1 }];
+            const colors = [chartColors.primary, chartColors.success, chartColors.warning, chartColors.purple, chartColors.cyan, chartColors.pink];
+
+            typeChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => d.type),
+                    datasets: [{
+                        data: data.map(d => d.count),
+                        backgroundColor: colors.slice(0, data.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyle: 'circle' } }
+                    }
+                }
+            });
+        }
+
+        function renderConfidenceChart(data) {
+            const ctx = document.getElementById("confidenceChart").getContext("2d");
+            if (confidenceChart) confidenceChart.destroy();
+
+            if (data.length === 0) data = [{ date: new Date().toISOString().split('T')[0], avg_confidence: 0 }];
+
+            confidenceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Avg Confidence %',
+                        data: data.map(d => d.avg_confidence),
+                        backgroundColor: data.map(d => d.avg_confidence >= 80 ? chartColors.success : d.avg_confidence >= 50 ? chartColors.warning : chartColors.danger),
+                        borderRadius: 6,
+                        barThickness: 24
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,0.06)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderRecentTable(data) {
+            const body = document.getElementById("recentBody");
+            if (data.length === 0) {
+                body.innerHTML = '<tr class="fd-table__row"><td class="fd-table__cell" colspan="6" style="text-align: center; color: var(--sapContent_LabelColor); padding: 2rem;">No extractions yet. Upload a document to get started!</td></tr>';
+                return;
+            }
+
+            body.innerHTML = data.map(e => {
+                const confStatus = e.avg_confidence >= 80 ? 'positive' : e.avg_confidence >= 50 ? 'critical' : 'negative';
+                const date = e.created_at ? new Date(e.created_at).toLocaleDateString() : '—';
+                return `
+          <tr class="fd-table__row">
+            <td class="fd-table__cell">${e.filename || '—'}</td>
+            <td class="fd-table__cell"><span class="fd-object-status fd-object-status--informative">${e.document_type || '—'}</span></td>
+            <td class="fd-table__cell">${e.header_count || 0}</td>
+            <td class="fd-table__cell">${e.line_item_count || 0}</td>
+            <td class="fd-table__cell"><span class="fd-object-status fd-object-status--${confStatus}">${e.avg_confidence || 0}%</span></td>
+            <td class="fd-table__cell" style="color: var(--sapContent_LabelColor); font-size: 0.85rem;">${date}</td>
+          </tr>
+        `;
+            }).join('');
+        }
+
+        function loadLocalHistory() {
+            const hist = JSON.parse(localStorage.getItem("documentAI_history") || "[]");
+            document.getElementById("statTotal").textContent = hist.reduce((sum, h) => sum + (h.docCount || 0), 0);
+            document.getElementById("statToday").textContent = hist.filter(h => h.date?.startsWith(new Date().toISOString().split('T')[0])).length;
+            document.getElementById("statConfidence").textContent = '—';
+            document.getElementById("statTypes").textContent = '—';
+
+            renderDailyChart([]);
+            renderTypeChart([]);
+            renderConfidenceChart([]);
+            renderRecentTable([]);
+        }
+
+        loadDashboard();
+    </script>
+</body>
+
+</html>
