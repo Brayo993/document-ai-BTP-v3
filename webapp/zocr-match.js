@@ -374,9 +374,13 @@ function lineMatchPercent(grpo, ocr, col) {
     const g = parseNum(grpo), o = parseNum(ocr);
     if (!Number.isFinite(g) || !Number.isFinite(o)) return 0;
     if (o === 0 && g === 0) return 100;
-    if (o === 0) return 0;
-    const pct = 100 - (Math.abs(g - o) / Math.abs(o)) * 100;
-    return Math.max(0, Math.min(100, Math.round(pct)));
+    if (o === 0 && g !== 0) return 0;
+    if (g === 0 && o !== 0) return 0;
+    // Symmetric relative difference: handles large gaps without clamping to 0%
+    const diff = Math.abs(g - o);
+    const scale = Math.abs(g) + Math.abs(o);
+    const pct = Math.round(100 * (1 - diff / scale));
+    return Math.max(0, Math.min(100, pct));
   }
   const a = normalizeForCompare(grpo), b = normalizeForCompare(ocr);
   return a && b && a === b ? 100 : 0;
