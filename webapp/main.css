@@ -770,6 +770,266 @@ body.fd-page {
 }
 
 /* ============================================ */
+/* ZOCR MATCH PAGE                              */
+/* ============================================ */
+
+/* Legend */
+.zocr-legend {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor, #6a6d70);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ZOCR Header Fields Grid */
+.zocr-header-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.zocr-field-card {
+  background: var(--sapTile_Background, #fff);
+  border: 1px solid var(--sapTile_BorderColor, #d9d9d9);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.zocr-field-card.matched {
+  border-left-color: var(--sapPositiveColor, #188918);
+}
+
+.zocr-field-card.mismatched {
+  border-left-color: var(--sapNegativeColor, #bb0000);
+  background: rgba(187, 0, 0, 0.02);
+}
+
+.zocr-field-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.zocr-field-name {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--sapContent_LabelColor, #6a6d70);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.zocr-value-row {
+  margin-bottom: 0.35rem;
+}
+
+.value-source-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.value-source-label.grpo {
+  color: var(--sapInformativeColor, #0070f2);
+}
+
+.value-source-label.ai-ocr {
+  color: var(--sapPositiveColor, #188918);
+}
+
+.grpo-input {
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--sapField_BorderColor, #89919a);
+  border-radius: 5px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--sapTextColor, #32363a);
+  background: var(--sapField_Background, #fff);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.grpo-input:focus {
+  outline: none;
+  border-color: var(--sapBrandColor, #0070f2);
+  box-shadow: 0 0 0 2px rgba(0, 112, 242, 0.15);
+}
+
+.grpo-input::placeholder {
+  color: var(--sapContent_LabelColor, #6a6d70);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.ai-ocr-value {
+  font-size: 0.82rem;
+  color: var(--sapTextColor, #32363a);
+  font-weight: 500;
+  word-break: break-word;
+  padding: 0.3rem 0.5rem;
+  background: var(--sapList_HeaderBackground, #f5f6f7);
+  border-radius: 5px;
+  border: 1px solid transparent;
+}
+
+/* Match / Mismatch Indicator */
+.match-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 10px;
+  margin-top: 0.3rem;
+}
+
+.match-indicator.match {
+  background: rgba(24, 137, 24, 0.15);
+  color: var(--sapPositiveColor, #188918);
+  border: 1px solid rgba(24, 137, 24, 0.25);
+}
+
+.match-indicator.mismatch {
+  background: rgba(187, 0, 0, 0.12);
+  color: var(--sapNegativeColor, #bb0000);
+  border: 1px solid rgba(187, 0, 0, 0.25);
+}
+
+.match-indicator.empty {
+  background: rgba(106, 109, 112, 0.08);
+  color: var(--sapNeutralColor, #6a6d70);
+  border: 1px solid rgba(106, 109, 112, 0.15);
+}
+
+/* Comparison Table */
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 0.5rem 0.625rem;
+  text-align: left;
+  border-bottom: 1px solid var(--sapList_BorderColor, #e4e4e4);
+}
+
+.comparison-table th {
+  font-weight: 600;
+  color: var(--sapContent_LabelColor, #6a6d70);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--sapList_HeaderBackground, #f5f6f7);
+}
+
+.col-group-header {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.4rem 0.5rem;
+}
+
+.col-group-header.grpo-group {
+  background: rgba(0, 112, 242, 0.08);
+  color: var(--sapInformativeColor, #0070f2);
+  border-bottom: 2px solid var(--sapInformativeColor, #0070f2);
+}
+
+.col-group-header.ai-group {
+  background: rgba(24, 137, 24, 0.08);
+  color: var(--sapPositiveColor, #188918);
+  border-bottom: 2px solid var(--sapPositiveColor, #188918);
+}
+
+.comparison-table th.grpo-col {
+  background: rgba(0, 112, 242, 0.05);
+}
+
+.comparison-table th.ai-col {
+  background: rgba(24, 137, 24, 0.05);
+}
+
+.comparison-table td.grpo-cell {
+  background: rgba(0, 112, 242, 0.02);
+}
+
+.comparison-table td.ai-cell {
+  background: rgba(24, 137, 24, 0.02);
+}
+
+.grpo-table-input {
+  width: 100%;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--sapField_BorderColor, #89919a);
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  background: var(--sapField_Background, #fff);
+  color: var(--sapTextColor, #32363a);
+}
+
+.grpo-table-input:focus {
+  outline: none;
+  border-color: var(--sapBrandColor, #0070f2);
+  box-shadow: 0 0 0 2px rgba(0, 112, 242, 0.1);
+}
+
+.comparison-table tbody tr:hover {
+  background: var(--sapList_Hover_Background, #eaecee);
+}
+
+.comparison-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ZOCR Match responsive */
+@media (max-width: 1024px) {
+  .zocr-header-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .zocr-header-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-table {
+    font-size: 0.7rem;
+  }
+
+  .zocr-legend {
+    gap: 0.75rem;
+  }
+}
+
+/* ============================================ */
 /* UTILITY                                      */
 /* ============================================ */
 

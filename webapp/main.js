@@ -259,6 +259,19 @@ btnExtract.addEventListener("click", async () => {
   }
 
   setTimeout(() => progressBar.classList.add("hidden"), 1000);
+
+  // Save extraction data for ZOCR Match page
+  const EXTRACTION_KEY = "documentAI_lastExtraction";
+  const extractionDataForZocr = {
+    timestamp: new Date().toISOString(),
+    results: extractionResults
+  };
+  try {
+    localStorage.setItem(EXTRACTION_KEY, JSON.stringify(extractionDataForZocr));
+  } catch (e) {
+    console.warn("Could not save extraction data for ZOCR Match:", e);
+  }
+
   renderResults();
   saveToHistory(extractionResults);
 });
