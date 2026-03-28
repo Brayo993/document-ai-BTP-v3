@@ -122,6 +122,7 @@ function init() {
   renderHeaderFields(header);
   renderLineItems(lines);
   renderSummaryStats(header);
+  renderClearButton(header, lines);
 }
 
 // Render Summary Stats
@@ -298,7 +299,19 @@ function renderLineItems(lines) {
               <td class="ai-cell">${formatValue(qty)}</td>
               <td class="ai-cell">${formatValue(unitP)}</td>
               <td class="ai-cell">${formatValue(netA)}</td>
-              <td style="text-align:center"><span class="confidence-badge ${confClass}" title="Avg confidence: ${avgConf}%">${avgConf !== null ? avgConf + '%' : '—'}</span></td>
+              <td style="text-align:center">
+              ${(() => {
+                const pct = rowMatchPercent(grpoLineItems[idx] || {}, item);
+                if (pct === null) {
+                  const confs = ['description','quantity','unitPrice','netAmount'].map(c => item[c]?.confidence).filter(c => c !== undefined);
+                  const aiPct = confs.length > 0 ? Math.round(confs.reduce((a,b)=>a+b,0)/confs.length*100) : null;
+                  const cls = aiPct === null ? 'confidence-none' : aiPct >= 80 ? 'confidence-high' : aiPct >= 50 ? 'confidence-medium' : 'confidence-low';
+                  return aiPct !== null ? `<span class="confidence-badge ${cls}" title="AI confidence: ${aiPct}%">${aiPct}%</span>` : '<span>—</span>';
+                }
+                const cls = confClassFromPct(pct);
+                return `<span class="confidence-badge ${cls}" title="Match: ${pct}%">${pct}%</span>`;
+              })()}
+              </td>
             </tr>
           `;
         }).join("")}
@@ -313,6 +326,23 @@ function renderLineItems(lines) {
       const col = e.target.dataset.col;
       if (grpoLineItems[row]) {
         grpoLineItems[row][col] = e.target.value;
+      }
+      // Update just this row's confidence cell without re-rendering
+      const tr = e.target.closest('tr');
+      if (tr) {
+        const pct = rowMatchPercent(grpoLineItems[row] || {}, lines[row]);
+        const confTd = tr.querySelector('td:last-child');
+        if (confTd) {
+          if (pct === null) {
+            const confs = ['description','quantity','unitPrice','netAmount'].map(c => lines[row]?.[c]?.confidence).filter(c => c !== undefined);
+            const aiPct = confs.length > 0 ? Math.round(confs.reduce((a,b)=>a+b,0)/confs.length*100) : null;
+            const cls = aiPct === null ? 'confidence-none' : aiPct >= 80 ? 'confidence-high' : aiPct >= 50 ? 'confidence-medium' : 'confidence-low';
+            confTd.innerHTML = aiPct !== null ? `<span class="confidence-badge ${cls}" title="AI confidence: ${aiPct}%">${aiPct}%</span>` : '<span>—</span>';
+          } else {
+            const cls = confClassFromPct(pct);
+            confTd.innerHTML = `<span class="confidence-badge ${cls}" title="Match: ${pct}%">${pct}%</span>`;
+          }
+        }
       }
     });
   });
@@ -331,9 +361,75 @@ function formatValue(val) {
   return String(val);
 }
 
+
+function parseNum(v) {
+  if (v == null) return NaN;
+  const n = Number(String(v).replace(/,/g, '').trim());
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function lineMatchPercent(grpo, ocr, col) {
+  const isNum = ['quantity','unitPrice','netAmount'].includes(col);
+  if (isNum) {
+    const g = parseNum(grpo), o = parseNum(ocr);
+    if (!Number.isFinite(g) || !Number.isFinite(o)) return 0;
+    if (o === 0 && g === 0) return 100;
+    if (o === 0) return 0;
+    const pct = 100 - (Math.abs(g - o) / Math.abs(o)) * 100;
+    return Math.max(0, Math.min(100, Math.round(pct)));
+  }
+  const a = normalizeForCompare(grpo), b = normalizeForCompare(ocr);
+  return a && b && a === b ? 100 : 0;
+}
+
+function rowMatchPercent(grpoRow, aiRow) {
+  const cols = ['description','quantity','unitPrice','netAmount'];
+  const filled = cols.filter(c => grpoRow?.[c] != null && String(grpoRow[c]).trim() !== '');
+  if (filled.length === 0) return null; // no GRPO data entered
+  const vals = filled.map(c => lineMatchPercent(grpoRow[c], aiRow?.[c]?.value ?? aiRow?.[c], c));
+  return Math.round(vals.reduce((x,y)=>x+y,0) / vals.length);
+}
+
+function confClassFromPct(p) {
+  if (p >= 80) return 'confidence-high';
+  if (p >= 50) return 'confidence-medium';
+  return 'confidence-low';
+}
+
 function escapeAttr(str) {
   return String(str).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+// Clear Button
+function renderClearButton(header, lines) {
+  let btn = document.getElementById("clearGrpoBtn");
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "clearGrpoBtn";
+    btn.textContent = "Clear GRPO Values";
+    btn.style.cssText = "margin: 1rem auto; display: block; padding: 0.5rem 1.5rem; background: var(--sapNegativeColor, #bb0000); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem;";
+    const card = document.getElementById("lineItemsCard");
+    if (card) card.after(btn);
+  }
+  btn.onclick = () => {
+    if (!confirm("Clear all GRPO values?")) return;
+    grpoValues = {};
+    grpoLineItems = grpoLineItems.map(() => ({ description: "", quantity: "", unitPrice: "", netAmount: "" }));
+    renderHeaderFields(header);
+    renderLineItems(lines);
+    renderSummaryStats(header);
+    renderClearButton(header, lines);
+  };
+}
+
+// Auto-refresh when new extraction is saved from Extract tab
+window.addEventListener("storage", (e) => {
+  if (e.key === "documentAI_lastExtraction" && e.newValue) {
+    grpoValues = {};
+    grpoLineItems = [];
+    init();
+  }
+});
 
 // Boot
 init();
