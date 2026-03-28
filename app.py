@@ -47,6 +47,15 @@ def dashboard():
     return "Dashboard page not found", 404
 
 
+@app.route("/zocr-match.html")
+def zocr_match():
+    if os.path.isdir(app.static_folder) and os.path.exists(
+        os.path.join(app.static_folder, "zocr-match.html")
+    ):
+        return send_from_directory(app.static_folder, "zocr-match.html")
+    return "ZOCR Match page not found", 404
+
+
 @app.route("/api/capabilities")
 def api_capabilities():
     try:
